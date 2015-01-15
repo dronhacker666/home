@@ -4,6 +4,6 @@
 *.lib
 *.so
 *.exe
-*.sublime-project
+*.sublime-workspace
 bin
 lib
