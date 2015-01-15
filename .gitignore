@@ -1,0 +1,9 @@
+*.o
+*.a
+*.dll
+*.lib
+*.so
+*.exe
+*.sublime-project
+bin
+lib
