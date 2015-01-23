@@ -1,11 +1,12 @@
-CCFLAGS=-Wall -D UNICODE
+CCFLAGS=-Wall -Wconversion -D UNICODE 
 
 ENGINE_NAME = engine
 PLAYER_NAME = player
 EDITOR_NAME = editor
 
 LIB_PATH = lib/$(for)
-INCLUDE_PATH = 
+INCLUDE_PATH = include
+
 
 #http://stackoverflow.com/questions/714100/os-detecting-makefile
 ifeq ($(OS),Windows_NT)
@@ -28,12 +29,14 @@ ifeq ($(SYSTEM),windows)
 endif
 ifeq ($(SYSTEM),linux)
 	ifeq ($(for),windows)
-		CC = i586-mingw32msvc-gcc
+		CC = i586-mingw32msvc-cc
 		AR = i586-mingw32msvc-ar
+		LD = i586-mingw32msvc-ld
 	endif
 	ifeq ($(for),linux)
 		CC = cc
 		AR = ar
+		LD = ld
 	endif
 endif
 
@@ -46,13 +49,7 @@ ifeq ($(for),linux)
 	CCFLAGS += -D LINUX
 endif
 
-
-
-define prepare_obj
-	$(eval _OBJ := $(filter %.o,$1)) \
-	$(join $(dir $(_OBJ)), $(addprefix $(for)_,$(notdir $(_OBJ))))
-endef
-
+vpath %.a $(LIB_PATH)
 
 .PHONY: all engine build player
 
@@ -65,32 +62,38 @@ info:
 
 build: engine	
 
+bin/$(for):
+	mkdir -p bin/$(for)
+
+$(LIB_PATH):
+	mkdir -p $(LIB_PATH)
+
 # ------ EDITOR ------
 EDITOR_SRC = $(wildcard src/player/*.c)
-EDITOR_OBJ = $(EDITOR_SRC:.c=.o)
-editor: engine $(EDITOR_OBJ)
-	mkdir -p bin/$(for)
-	$(CC) $(call prepare_obj,$^) \
+EDITOR_OBJ = $(EDITOR_SRC:.c=.$(for).o)
+editor: bin/$(for) engine $(EDITOR_OBJ)
+	$(CC) $(filter %.o,$^) \
 		-o bin/$(for)/$(EDITOR_NAME) \
 		$(addprefix -L,$(LIB_PATH)) \
 		-lengine $(addprefix -l,$(ENGINE_LINK))
 
 # ------ PLAYER ------
 PLAYER_SRC = $(wildcard src/player/*.c)
-PLAYER_OBJ = $(PLAYER_SRC:.c=.o)
-player: engine $(PLAYER_OBJ)
-	mkdir -p bin/$(for)
-	$(CC) $(call prepare_obj,$^) \
+PLAYER_OBJ = $(PLAYER_SRC:.c=.$(for).o)
+player: bin/$(for) engine $(PLAYER_OBJ)
+	$(CC) $(filter %.o,$^) \
 		-o bin/$(for)/$(PLAYER_NAME) \
 		$(addprefix -L,$(LIB_PATH)) \
-		-lengine $(addprefix -l,$(ENGINE_LINK))
+		$(addprefix -l,$(ENGINE_LINK)) \
+		-Wl,--export-dynamic
 
 
 # ------ ENGINE ------
 INCLUDE_PATH += src/engine
 ENGINE_SRC = $(wildcard src/engine/*.c) $(wildcard src/engine/$(for)/*.c)
-ENGINE_OBJ = $(ENGINE_SRC:.c=.o)
+ENGINE_OBJ = $(ENGINE_SRC:.c=.$(for).o)
 
+ENGINE_LINK = engine dl
 ifeq ($(for),windows)
 	ENGINE_LINK += opengl32 glu32
 endif
@@ -98,17 +101,39 @@ ifeq ($(for),linux)
 	ENGINE_LINK += X11 GL GLU
 endif
 
-engine: $(ENGINE_OBJ)
-	mkdir -p lib/$(for)
-	$(AR) rcs lib/$(for)/lib$(ENGINE_NAME).a $(call prepare_obj,$^)
+engine: -l$(ENGINE_NAME)
 
-
+-l$(ENGINE_NAME): $(LIB_PATH) $(ENGINE_OBJ)
+	$(AR) rcs $(LIB_PATH)/lib$(ENGINE_NAME).a $(filter %.o,$?)
 
 run:
-	./bin/$(for)/$(PLAYER_NAME)
+	cd bin/$(for) && ./$(PLAYER_NAME)
 
-.c.o:
-	$(CC) -c $< -o $(dir $@)$(for)_$(notdir $@) $(addprefix -I,$(INCLUDE_PATH)) $(CCFLAGS)
+%.$(for).o: %.c
+	$(CC) -c $^ -o $@ $(addprefix -I,$(INCLUDE_PATH)) $(CCFLAGS)
 
 clean:
-	rm -f *.o
+	rm -rf bin
+	rm -f src/*/*.o
+	rm -f src/*/*/*.o
+
+
+# MODULES
+MODULES_PATH = src/engine/modules
+MODULES_LIB = $(LIB_PATH)/modules
+
+CCFLAGS += -D MODULES_LIB=\"$(MODULES_LIB)\"
+
+MODULES_ARGS += for=$(for)
+MODULES_ARGS += CC=$(CC)
+MODULES_ARGS += LD=$(LD)
+MODULES_ARGS += MODULES_LIB=$(abspath $(MODULES_LIB))
+MODULES_ARGS += INCLUDE_PATH=$(abspath src/engine)
+
+$(MODULES_LIB):
+	mkdir -p $(MODULES_LIB)
+
+module_%: $(MODULES_LIB)
+	$(MAKE) -C $(patsubst module_%,$(MODULES_PATH)/%,$@) $(MODULES_ARGS) 
+
+all_modules: $(patsubst $(MODULES_PATH)/%/,module_%,$(dir $(wildcard $(MODULES_PATH)/*/)))
