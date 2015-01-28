@@ -43,11 +43,11 @@ endif
 ifeq ($(for),windows)
 	PLAYER_NAME := $(PLAYER_NAME).exe
 	EDITOR_NAME := $(EDITOR_NAME).exe
-	CCFLAGS += -D WINDOWS
 endif
 ifeq ($(for),linux)
-	CCFLAGS += -D LINUX
 endif
+
+CCFLAGS += -D $(call uc,$(for))
 
 vpath %.a $(LIB_PATH)
 
@@ -84,8 +84,7 @@ player: bin/$(for) engine $(PLAYER_OBJ)
 	$(CC) $(filter %.o,$^) \
 		-o bin/$(for)/$(PLAYER_NAME) \
 		$(addprefix -L,$(LIB_PATH)) \
-		$(addprefix -l,$(ENGINE_LINK)) \
-		-Wl,--export-dynamic
+		$(addprefix -l,$(ENGINE_LINK))
 
 
 # ------ ENGINE ------
@@ -93,12 +92,12 @@ INCLUDE_PATH += src/engine
 ENGINE_SRC = $(wildcard src/engine/*.c) $(wildcard src/engine/$(for)/*.c)
 ENGINE_OBJ = $(ENGINE_SRC:.c=.$(for).o)
 
-ENGINE_LINK = engine dl
+ENGINE_LINK = engine
 ifeq ($(for),windows)
-	ENGINE_LINK += opengl32 glu32
+	ENGINE_LINK += opengl32 glu32 kernel32
 endif
 ifeq ($(for),linux)
-	ENGINE_LINK += X11 GL GLU
+	ENGINE_LINK += X11 GL GLU dl
 endif
 
 engine: -l$(ENGINE_NAME)
@@ -124,11 +123,14 @@ MODULES_LIB = $(LIB_PATH)/modules
 
 CCFLAGS += -D MODULES_LIB=\"$(MODULES_LIB)\"
 
+MODULES_DEF += -D $(call uc,$(for))
+
 MODULES_ARGS += for=$(for)
 MODULES_ARGS += CC=$(CC)
 MODULES_ARGS += LD=$(LD)
 MODULES_ARGS += MODULES_LIB=$(abspath $(MODULES_LIB))
 MODULES_ARGS += INCLUDE_PATH=$(abspath src/engine)
+MODULES_ARGS += MODULES_DEF='$(MODULES_DEF)'
 
 $(MODULES_LIB):
 	mkdir -p $(MODULES_LIB)
@@ -137,3 +139,9 @@ module_%: $(MODULES_LIB)
 	$(MAKE) -C $(patsubst module_%,$(MODULES_PATH)/%,$@) $(MODULES_ARGS) 
 
 all_modules: $(patsubst $(MODULES_PATH)/%/,module_%,$(dir $(wildcard $(MODULES_PATH)/*/)))
+
+
+# FUNCTIONS
+define uc
+$(shell echo $1 | tr a-z A-Z)
+endef

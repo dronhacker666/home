@@ -12,6 +12,7 @@
 
 int createWindow(int /*Window width*/, int /*Window height*/);
 
+void callLib(const char* name);
 
 /**
  * 
@@ -28,6 +29,5 @@ typedef struct Node{
 Node* createNode(const char* tagName);
 void appendChild(Node* parent, Node* child);
 
-Node* getRootNode(void);
 
 #endif

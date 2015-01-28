@@ -27,3 +27,25 @@ int createWindow(int width, int height)
 
 	return 0;
 }
+
+
+void callLib(const char* name)
+{
+	wchar_t wpath[256];
+	char path[256] = "../../"MODULES_LIB"/";
+	strcat(path, name);
+	strcat(path, ".");
+
+	swprintf(wpath, L"%hs", path);
+
+	HINSTANCE lib = LoadLibrary(wpath);
+
+	if(!lib){
+		printf("DL error\n");
+		exit(-1);
+	}
+
+	void(*fn)(void) = GetProcAddress(lib, "render");
+	fn();
+	FreeLibrary(lib);
+}

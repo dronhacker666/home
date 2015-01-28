@@ -31,18 +31,18 @@ void appendChild(Node* parent, Node* child)
 	child->parent = parent;
 }
 
-bool trackFile(const char* filename, void(*callback)(void))
-{
-	struct stat buf;
-	int timer;
-	while(1){
-		if(stat(filename, &buf)!=0){
-			return false;
-		}
-		if(timer != buf.st_mtime){
-			callback();
-		}
-		timer = buf.st_mtime;
-		sleep(1);
-	}
-}
+// bool trackFile(const char* filename, void(*callback)(void))
+// {
+// 	struct stat buf;
+// 	int timer;
+// 	while(1){
+// 		if(stat(filename, &buf)!=0){
+// 			return false;
+// 		}
+// 		if(timer != buf.st_mtime){
+// 			callback();
+// 		}
+// 		timer = buf.st_mtime;
+// 		//sleep(1);
+// 	}
+// }

@@ -1,18 +1,38 @@
 #include <engine.h>
 
+#ifdef WINDOWS
+	#include <windows.h>
+
+
+BOOL WINAPI DllMain(HANDLE hModule, DWORD dwFunction, LPVOID lpNot)
+{
+	return TRUE;
+}
+
+#endif
+
+#ifdef LINUX
+	#include <dlfcn.h>
+#endif
+
+
+Node* (*getRootNode)(void) = NULL;
+
 void render(void)
 {
-	Node* root = getRootNode();
 	printf("%s\n", "I'am test module!!!");
-	printf("%s\n", root->tagName);
-}
+	
+	#ifdef WINDOWS
+		HINSTANCE hndl = GetModuleHandle(NULL);
+		getRootNode = GetProcAddress(hndl, "getRootNode");
+	#endif
+	#ifdef LINUX
+		void* hndl = dlopen(NULL, RTLD_LAZY);
+		Node* (*getRootNode)(void) = dlsym(hndl, "getRootNode");
+	#endif
 
-void _init(void)
-{
-	printf("%s\n", "call _init");
-}
+	printf("%i\n", getRootNode);
 
-void _fini(void)
-{
-	printf("%s\n", "call _fini");
+	//Node* root = getRootNode();
+	//printf("%s\n", root->tagName);
 }

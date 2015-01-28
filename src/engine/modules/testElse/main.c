@@ -2,9 +2,7 @@
 
 void render(void)
 {
-	Node* root = getRootNode();
 	printf("%s\n", "I'am test module!!!");
-	printf("%s\n", root->tagName);
 }
 
 void _init(void)
