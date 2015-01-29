@@ -11,10 +11,13 @@ int createWindow(int width, int height)
 }
 
 
-void callLib(const char* name)
+void callLib(const wchar_t* name)
 {
-	char path[256] = "../../"MODULES_LIB"/";
-	strcat(path, name);
+	char path[256];
+	wchar_t tpath[256] = L"../../"MODULES_LIB"/";
+	wcscat(tpath, name);
+
+	wcstombs(path, tpath, sizeof(path));
 
 	void* lib = dlopen(path, RTLD_LAZY);
 	if(!lib){

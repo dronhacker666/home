@@ -32,11 +32,13 @@ ifeq ($(SYSTEM),linux)
 		CC = i586-mingw32msvc-cc
 		AR = i586-mingw32msvc-ar
 		LD = i586-mingw32msvc-ld
+		EXPORT = --export-all-symbols
 	endif
 	ifeq ($(for),linux)
 		CC = cc
 		AR = ar
 		LD = ld
+		EXPORT = -E
 	endif
 endif
 
@@ -84,7 +86,7 @@ player: bin/$(for) engine $(PLAYER_OBJ)
 	$(CC) $(filter %.o,$^) \
 		-o bin/$(for)/$(PLAYER_NAME) \
 		$(addprefix -L,$(LIB_PATH)) \
-		$(addprefix -l,$(ENGINE_LINK))
+		$(addprefix -l,$(ENGINE_LINK)) -Wl,$(EXPORT)
 
 
 # ------ ENGINE ------

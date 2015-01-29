@@ -29,16 +29,13 @@ int createWindow(int width, int height)
 }
 
 
-void callLib(const char* name)
+void callLib(const wchar_t* name)
 {
-	wchar_t wpath[256];
-	char path[256] = "../../"MODULES_LIB"/";
-	strcat(path, name);
-	strcat(path, ".");
+	wchar_t path[256] = L"../../"MODULES_LIB"/";
+	wcscat(path, name);
+	wcscat(path, L".");
 
-	swprintf(wpath, L"%hs", path);
-
-	HINSTANCE lib = LoadLibrary(wpath);
+	HINSTANCE lib = LoadLibrary(path);
 
 	if(!lib){
 		printf("DL error\n");

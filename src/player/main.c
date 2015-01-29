@@ -20,10 +20,16 @@ int main(void)
 	appendChild(html, body);
 
 
+	Node* subnode = createNode("ROOM");
+		appendChild(subnode, createNode("CAMERA"));
+		appendChild(subnode, createNode("LIGHT"));
+
+	appendChild(body, subnode);
+
 	//printf("%s\n", body->prev->tagName);
 
 
-	callLib("test");
+	callLib(L"test");
 	//callLib("testElse");
 
 	//trackFile("/home/andrey/projects/new/testfile");

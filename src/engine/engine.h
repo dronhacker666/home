@@ -12,7 +12,7 @@
 
 int createWindow(int /*Window width*/, int /*Window height*/);
 
-void callLib(const char* name);
+void callLib(const wchar_t* name);
 
 /**
  * 
