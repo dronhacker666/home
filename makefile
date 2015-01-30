@@ -23,8 +23,9 @@ endif
 for = $(SYSTEM)
 ifeq ($(SYSTEM),windows)
 	ifeq ($(for),windows)
-		CC = mingw32-cc.exe
-		AR = mingw32-ar.exe
+		CC = cc.exe
+		AR = ar.exe
+		EXPORT = --export-all-symbols
 	endif
 endif
 ifeq ($(SYSTEM),linux)
@@ -65,10 +66,10 @@ info:
 build: engine	
 
 bin/$(for):
-	mkdir -p bin/$(for)
+	$(call mkdir,bin/$(for))
 
 $(LIB_PATH):
-	mkdir -p $(LIB_PATH)
+	$(call mkdir,$(LIB_PATH))
 
 # ------ EDITOR ------
 EDITOR_SRC = $(wildcard src/player/*.c)
@@ -135,7 +136,7 @@ MODULES_ARGS += INCLUDE_PATH=$(abspath src/engine)
 MODULES_ARGS += MODULES_DEF='$(MODULES_DEF)'
 
 $(MODULES_LIB):
-	mkdir -p $(MODULES_LIB)
+	$(call mkdir,$(MODULES_LIB))
 
 module_%: $(MODULES_LIB)
 	$(MAKE) -C $(patsubst module_%,$(MODULES_PATH)/%,$@) $(MODULES_ARGS) 
@@ -144,6 +145,12 @@ all_modules: $(patsubst $(MODULES_PATH)/%/,module_%,$(dir $(wildcard $(MODULES_P
 
 
 # FUNCTIONS
-define uc
-$(shell echo $1 | tr a-z A-Z)
-endef
+lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
+uc = $(subst a,A,$(subst b,B,$(subst c,C,$(subst d,D,$(subst e,E,$(subst f,F,$(subst g,G,$(subst h,H,$(subst i,I,$(subst j,J,$(subst k,K,$(subst l,L,$(subst m,M,$(subst n,N,$(subst o,O,$(subst p,P,$(subst q,Q,$(subst r,R,$(subst s,S,$(subst t,T,$(subst u,U,$(subst v,V,$(subst w,W,$(subst x,X,$(subst y,Y,$(subst z,Z,$1))))))))))))))))))))))))))
+
+ifeq ($(SYSTEM),windows)
+	mkdir = mkdir $(subst /,\\,$1)
+endif
+ifeq ($(SYSTEM),linux)
+	mkdir = mkdir -p $1
+endif
